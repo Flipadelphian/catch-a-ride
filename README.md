@@ -19,6 +19,10 @@ For a given subway line, station on that line, direction of the train, and numbe
 
 Continue function definitions and adding comments
 
+### Validation
+
+Continue validating user input and add test cases
+
 ### Expand .data/
 
 Create a `data/stations_per_line.json` file that lists all station IDs for a given subway line
