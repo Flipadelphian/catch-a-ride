@@ -4,17 +4,42 @@ import requests
 from google.protobuf import json_format
 
 SUBWAY_LINE_URL_SUFFIX = {
-    'ACE_Sr': '-ace',
-    'BDFM_Sf': '-bdfm',
+    'A': '-ace',
+    'C': '-ace',
+    'E': '-ace',
+    'Sr': '-ace',
+    'B': '-bdfm',
+    'D': '-bdfm',
+    'F': '-bdfm',
+    'M': '-bdfm',
+    'Sf': '-bdfm',
     'G': '-g',
-    'JZ': '-jz',
-    'NQRW': '-nqrw',
+    'J': '-jz',
+    'Z': '-jz',
+    'N': '-nqrw',
+    'Q': '-nqrw',
+    'R': '-nqrw',
+    'W': '-nqrw',
     'L': '-l',
-    '1234567_S': '',
+    '1': '',
+    '2': '',
+    '3': '',
+    '4': '',
+    '5': '',
+    '6': '',
+    '7': '',
+    'S': '',
     'SIR': '-si',
 }
 
-SUBWAY_SELECTOR_MAP = list(SUBWAY_LINE_URL_SUFFIX.keys())
+SHUTTLE_INTERNAL_MAPPING = {
+    'Sr': 'H',
+    'Sf': 'FS',
+    'S': 'GS',
+    'SIR': 'SI',
+}
+
+SUBWAY_LINE_LIST = list(SUBWAY_LINE_URL_SUFFIX.keys())
 
 SUBWAY_BASE_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
 
@@ -52,18 +77,18 @@ def bin_to_feedmessage(indata: bytes) -> dict:
     message_dict = json_format.MessageToDict(pb_data) # Translate the message to a Python-readable dictionary
     return message_dict
 
-def get_realtime_data(subway_line_group: str) -> dict:
+def get_realtime_data(subway_line: str) -> dict:
     """
     Collect real-time subway data for the given line group.
 
     Args:
-        subway_line_group: The identifier for the group of subway lines to be fetched. Must match one of the values in SUBWAY_SELECTOR_MAP.
+        subway_line: The identifier for the subway lines to be fetched. Must match one of the values in SUBWAY_LINE_LIST.
 
     Returns:
-        message_data: A dictionary of real-time subway details.
+        message_data: A dictionary of real-time subway details. Note that in most cases, the output will contain data unrelated to the request (e.g., input '1' will contain data for the 1/2/3/4/5/6/7/S trains)
     """
     try:
-        subway_realtime_api= f'{SUBWAY_BASE_URL}{SUBWAY_LINE_URL_SUFFIX[subway_line_group]}'
+        subway_realtime_api= f'{SUBWAY_BASE_URL}{SUBWAY_LINE_URL_SUFFIX[subway_line]}'
     except Exception as e:
         print(f"Error locating subway group: {e}")
         return None

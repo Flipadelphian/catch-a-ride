@@ -1,0 +1,39 @@
+import src.mta_subway_fetcher as mta_subway_fetcher
+import json
+
+def get_stops_for_lines():
+    lines_with_stops = {}
+    subway_lines = mta_subway_fetcher.SUBWAY_LINE_LIST
+    for line in subway_lines:
+        lines_with_stops[line] = []
+        if line in mta_subway_fetcher.SHUTTLE_INTERNAL_MAPPING.keys():
+            route_id = mta_subway_fetcher.SHUTTLE_INTERNAL_MAPPING[line]
+        else: 
+            route_id = line
+        line_data = mta_subway_fetcher.get_realtime_data(line)['entity']
+        for e in line_data:
+            if e.get('vehicle') and e['vehicle']['trip']['routeId'] == route_id and e['vehicle'].get('stopId') and e['vehicle']['stopId'] not in lines_with_stops[line]:
+                lines_with_stops[line].append(e['vehicle']['stopId'])
+            elif e.get('tripUpdate') and e['tripUpdate']['trip']['routeId'] == route_id and e['tripUpdate'].get('stopTimeUpdate'):
+                for stop in e['tripUpdate']['stopTimeUpdate']:
+                    if stop['stopId'] not in lines_with_stops[line]:
+                        lines_with_stops[line].append(stop['stopId'])
+    return lines_with_stops
+
+def remove_directionality_and_dedupe(lines_with_stops_both_directions):
+    new_lines_with_stops = {}
+    for line in lines_with_stops_both_directions.keys():
+        new_lines_with_stops[line] = []
+    for k,v in lines_with_stops_both_directions.items():
+        for station in v:
+            if station[-1] == "S" or station[-1] == "N":
+                new_station = station[:-1]
+            new_lines_with_stops[k].append(new_station)
+        new_lines_with_stops[k] = list(set(new_lines_with_stops[k]))
+    return new_lines_with_stops
+
+
+lines_with_stops = get_stops_for_lines()
+deduped_lines_with_stops = remove_directionality_and_dedupe(lines_with_stops)
+with open(f"data/stations_per_line.json", "w") as f:
+    json.dump(deduped_lines_with_stops, f, indent=2)
