@@ -1,3 +1,7 @@
+# Local test files
+local_testing_script.py
+tmp/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

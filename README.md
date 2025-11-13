@@ -23,34 +23,10 @@ Continue function definitions and adding comments
 
 Continue validating user input and add test cases
 
-### Expand .data/
+### Do not rely on /data for stations per line
 
-Create a `data/stations_per_line.json` file that lists all station IDs for a given subway line
-```
-with open('tmp/1.json', 'r') as f:
-    1_stats = json.load(f)
-for e in 1_stats['entity']:
-    for i in e['tripUpdate']['stopTimeUpdate']:
-        print(i['stopId'])
-```
-Replace `print(i['stopId'])` with "create a list of unique `stopId` values with their friendly name", repeat for each line, and merge into a `stations_per_line.json` file of format:
-```
-{ 
-    'subway_line_x': [('stop_1_name', 'stop_id_1'), ('stop_2_name', 'stop_id_2'), ...],
-    'subway_line_y': [('stop_1_name', 'stop_id_1'), ('stop_2_name', 'stop_id_2'), ...],
-    ...
-}
-```
-
-### Prompt for station
-
-Extend `def get_subway_selection()` with a prompt to select the subway station for the given line, based on the available stops found for `subway_line_x` in `data/stations_per_line.json`.
-
-### Streamline subway line selection
-
-Remove the prompt for a subway group. End users get no benefit from selecting the MTA's subway grouping as they must select a specific subway line regardless - this extra step only creates friction.
-
-Selecting a group may have a future benefit for a scenario like "give me all trains at this station that go to the same stop", but that scenario is out of scope at this time.
+`stations_per_line.json` was collected at a time when (luckily) the Z train was in service and there were no active alerts for trains skipping stations -- with the assumption that all subway lines had trip data for every stop along their normal service path. This does not account for weekend/modified service and can lead to inaccurate/unhelpful output under certain conditions (e.g., checking for late night service, or reroutes caused by unplanned maintenance).
+Consider a disclaimer that the saved data applies only to regular service for mapping purposes, and switch to performing real-time station lookups for live service.
 
 ## Future Goals
 
