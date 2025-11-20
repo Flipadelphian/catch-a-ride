@@ -3,6 +3,10 @@ from src.gtfsproto import nyct_subway_pb2
 import requests
 from google.protobuf import json_format
 
+# SUBWAY_BASE_URL -- The URL needed to make API calls for real-time subway line data. For subways other that the numbered lines and Grand Central shuttle, a suffix must be appended to this URL
+SUBWAY_BASE_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
+
+# SUBWAY_LINE_URL_SUFFIX -- The string to append to SUBWAY_BASE_URL to pull real-time data for the given subway line
 SUBWAY_LINE_URL_SUFFIX = {
     'A': '-ace',
     'C': '-ace',
@@ -32,6 +36,7 @@ SUBWAY_LINE_URL_SUFFIX = {
     'SIR': '-si',
 }
 
+# SHUTTLE_INTERNAL_MAPPING -- The route ID used by Shuttles and Staten Island Railway, separate from the character(s) used to visually represent the subway line
 SHUTTLE_INTERNAL_MAPPING = {
     'Sr': 'H',
     'Sf': 'FS',
@@ -39,9 +44,9 @@ SHUTTLE_INTERNAL_MAPPING = {
     'SIR': 'SI',
 }
 
+# SUBWAY_LINE_LIST -- All available subway lines converted to a list of strings
 SUBWAY_LINE_LIST = list(SUBWAY_LINE_URL_SUFFIX.keys())
 
-SUBWAY_BASE_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
 
 def api_to_bin(api_url: str) -> bytes:
     """

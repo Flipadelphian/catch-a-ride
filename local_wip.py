@@ -7,7 +7,16 @@ import json
 def get_subway_selection() -> tuple[str, str, str, int]:
     """
     Prompt the user to select a subway line, station, and direction
-    """    
+    
+    Args:
+        None (collects user input)
+    
+    Returns:
+        input_line: A string representing the chosen subway line
+        input_station_id: A string representing the chosen subway station
+        input_direction: A string representing the chosen direction (uptown/northbound or downtown/southbound)
+        input_count: An integer, between 1 and 5, representing the count of upcoming subway lines to return
+    """
     input_validator = True
     while input_validator:
         print(mta_subway_fetcher.SUBWAY_LINE_LIST)
@@ -60,20 +69,27 @@ def fetch_data_from_input(subway_line: str) -> dict:
     Collect input from the user to fetch real-time data for the selected subway line.
 
     Args:
-        subway_line: A number in the printed acceptable values, corresponding to a subway group string
+        subway_line: A string representing the chosen subway line
 
     Returns:
         subway_data: A dict of MTA real-time data for the subway line group of the desired line (e.g., 1/2/3/4/5/6/7/S for input '1')
     """
     subway_data = mta_subway_fetcher.get_realtime_data(subway_line)
-    output_filepath = f'tmp/{subway_line}.json'
+    output_filepath = f'tmp/{subway_line}_group-data.json'
     with open(output_filepath, 'w') as f:
         json.dump(subway_data, f, indent=2)
     return subway_data
 
 def extract_subway_line(subway_line: str, subway_group_dict: dict) -> dict:
     """
-    For a given group of subway lines, extract only the desired subway line.
+    For real-time data on a given group of subway lines, extract only the desired subway line.
+    
+    Args:
+        subway_line: A string representing the chosen subway line
+        subway_group_dict: A dict of MTA real-time data for the subway line group of the desired line (e.g., 1/2/3/4/5/6/7/S for input '1')
+    
+    Returns:
+        line_stats: The input dict 'subway_group_dict' with the value in 'entity' filtered down to only the chosen subway line. Note that the 'header' values still contain Route IDs for the entire group, although these values are unused.
     """
     line_stats = {'header': None, 'entity': []}
     line_stats['header'] = subway_group_dict['header']
@@ -88,6 +104,15 @@ def extract_subway_line(subway_line: str, subway_group_dict: dict) -> dict:
 def find_next_arrival_times(subway_lines_stats: dict, station_name: str, direction: str, next_x_trains: int):
     """
     For a given subway line's data, a station stop, and a direction, find the next X arrival times.
+    
+    Args:
+        subway_lines_stats: A dict of MTA real-time data for the chosen subway line
+        station_name: A string representing the chosen subway station
+        direction: A string representing the chosen direction (uptown/northbound or downtown/southbound)
+        next_x_trains: An integer representing the count of upcoming subway lines to return
+    
+    Returns:
+        arrival_times: A list of integers representing arrival times of upcoming trains, in Epoch time
     """
     full_station_name = station_name + direction
     inc = 0
@@ -97,7 +122,7 @@ def find_next_arrival_times(subway_lines_stats: dict, station_name: str, directi
             break
         for i in e['tripUpdate']['stopTimeUpdate']:
             if i['stopId'] == full_station_name:
-                arrival_times.append(i['arrival']['time'])
+                arrival_times.append(int(i['arrival']['time']))
                 inc += 1
     return arrival_times
 
@@ -112,6 +137,6 @@ def main():
 
     current_time = datetime.now().timestamp()
     for i in next_train_times:
-        print(f"Train arriving in {int((int(i)-current_time) / 60.0)} minutes")
+        print(f"Train arriving in {int((i-current_time) / 60.0)} minutes")
 
 main()
