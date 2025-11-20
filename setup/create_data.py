@@ -10,7 +10,7 @@ def load_stops_maps(csv_file="data/stops.csv") -> tuple[defaultdict[list], dict[
         csv_file: The path to a CSV file containing "stop_id" and "stop_name" columns
     
     Returns:
-        name_to_ids_map: A dict of lists of strings, with keys as the human-readable names of a station and values as a list of machine-readable station IDs
+        name_to_ids_map: A defaultdict of lists of strings, with keys as the human-readable names of a station and values as a list of machine-readable station IDs
         id_to_name_map: A dict of strings, with keys as a list of machine-readable station IDs and values as the human-readable names of a station
     """
     name_to_ids_map = defaultdict(list)

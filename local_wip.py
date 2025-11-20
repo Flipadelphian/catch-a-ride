@@ -101,7 +101,7 @@ def extract_subway_line(subway_line: str, subway_group_dict: dict) -> dict:
         json.dump(line_stats, f, indent=2)
     return line_stats
 
-def find_next_arrival_times(subway_lines_stats: dict, station_name: str, direction: str, next_x_trains: int):
+def find_next_arrival_times(subway_lines_stats: dict, station_name: str, direction: str, next_x_trains: int) -> list[int]:
     """
     For a given subway line's data, a station stop, and a direction, find the next X arrival times.
     
