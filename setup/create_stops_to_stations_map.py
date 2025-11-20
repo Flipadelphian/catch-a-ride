@@ -1,7 +1,16 @@
 import src.mta_subway_fetcher as mta_subway_fetcher
 import json
 
-def get_stops_for_lines():
+def get_stops_for_lines(subway_lines: list[str]=mta_subway_fetcher.SUBWAY_LINE_LIST) -> dict:
+    """
+    Make API calls for real-time subway data to collect a list of stations per subway line, and return all available stations for the subway line(s).
+    
+    Args:
+        subway_lines: A list of strings for the subway line(s) to search. Defaults to all possible subway lines.
+    
+    Returns:
+        lines_with_stops: A dict of lists of strings, with keys as the names of subway lines and values as a list of machine-readable station IDs
+    """
     lines_with_stops = {}
     subway_lines = mta_subway_fetcher.SUBWAY_LINE_LIST
     for line in subway_lines:
@@ -20,7 +29,17 @@ def get_stops_for_lines():
                         lines_with_stops[line].append(stop['stopId'])
     return lines_with_stops
 
-def remove_directionality_and_dedupe(lines_with_stops_both_directions):
+def remove_directionality_and_dedupe(lines_with_stops_both_directions) -> dict:
+    """
+    Take the output of function 'get_stops_for_lines' and remove all duplicate entries caused by direction included in station IDs.
+    For example, 1 train station "66 St-Lincoln Center" has values ["124", "124N", "124S"] but should be reduced to "124"
+    
+    Args:
+        lines_with_stops_both_directions: A dict of lists of strings, with keys as the names of subway lines and values as a list of machine-readable station IDs (possibly containing duplicate station IDs)
+    
+    Returns:
+        new_lines_with_stops: A dict of lists of strings, with keys as the names of subway lines and values as a list of unique machine-readable station IDs
+    """
     new_lines_with_stops = {}
     for line in lines_with_stops_both_directions.keys():
         new_lines_with_stops[line] = []
