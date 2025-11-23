@@ -15,14 +15,15 @@ For a given subway line, station on that line, direction of the train, and numbe
 
 ## TODO
 
-### Discard past arrival times
+### Improve deduplication of stop IDs for partial directional service
 
-In certain cases, stale data may be present in the API output that leads to showing invalid arrival times (e.g., a file written at timestamp '1763604000' contained an arrival time '1763599950', leading to an output of "Train arriving in -67 minutes"). The function `find_next_arrival_times` should take `current_time` as an arguemnt and only append `i['arrival']['time']` if it is greater than `current_time`.
+The function `remove_directionality_and_dedupe` in `src/mta_stops_to_stations.py` shows all available station IDs for a line, but does not consider scenarios where a line may skip stations in only one direction or make extra/local stops in only one direction.
+The above function should be updated to create separate North/South lists of stop IDs for a given line, with the main script (having already been updated to prompt for direction before stop ID) selecting the appropriate list.
 
-### Do not rely on /data for stations per line
+### Explicitly deprecate the stations per line file in /data 
 
 `data/stations_per_line.json` was collected at a time when (luckily) the Z train was in service and there were no active alerts for trains skipping stations -- with the assumption that all subway lines had trip data for every stop along their normal service path. This does not account for weekend/modified service and can lead to inaccurate/unhelpful output under certain conditions (e.g., checking for late night service, or reroutes caused by unplanned maintenance).
-Consider a disclaimer that the saved data applies only to regular service for mapping purposes, and switch to performing real-time station lookups for live service.
+Add a disclaimer that the saved data applies only to regular service for mapping purposes.
 
 ### Add detailed setup instructions
 
