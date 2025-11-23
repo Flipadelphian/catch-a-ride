@@ -1,18 +1,16 @@
 import src.mta_subway_fetcher as mta_subway_fetcher
-import json
 
-def get_stops_for_lines() -> dict:
+def get_stops_for_lines(subway_lines: list[str]=mta_subway_fetcher.SUBWAY_LINE_LIST) -> dict:
     """
     Make API calls for real-time subway data to collect a list of stations per subway line, and return all available stations for the subway line(s).
     
     Args:
-        None (uses all possible subway lines, not giving a selection for this setup purpose)
+        subway_lines: A list of strings for the subway line(s) to search. Defaults to all possible subway lines.
     
     Returns:
         lines_with_stops: A dict of lists of strings, with keys as the names of subway lines and values as a list of machine-readable station IDs
     """
     lines_with_stops = {}
-    subway_lines = mta_subway_fetcher.SUBWAY_LINE_LIST
     for line in subway_lines:
         lines_with_stops[line] = []
         if line in mta_subway_fetcher.SHUTTLE_INTERNAL_MAPPING.keys():
@@ -50,9 +48,3 @@ def remove_directionality_and_dedupe(lines_with_stops_both_directions) -> dict:
             new_lines_with_stops[k].append(new_station)
         new_lines_with_stops[k] = list(set(new_lines_with_stops[k]))
     return new_lines_with_stops
-
-
-lines_with_stops = get_stops_for_lines()
-deduped_lines_with_stops = remove_directionality_and_dedupe(lines_with_stops)
-with open(f"data/stations_per_line.json", "w") as f:
-    json.dump(deduped_lines_with_stops, f, indent=2)

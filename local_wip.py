@@ -1,20 +1,22 @@
 import src.mta_subway_fetcher as mta_subway_fetcher
+import src.mta_stops_to_stations as mta_stops_to_stations
 
 from datetime import datetime
 from collections import defaultdict
 import json
 
-def get_subway_selection() -> tuple[str, str, str, int]:
+def get_subway_selection(realtime_stations: bool=True) -> tuple[str, str, str, int]:
     """
     Prompt the user to select a subway line, station, and direction
     
     Args:
-        None (collects user input)
+        realtime_stations: Whether to fetch real-time station data (True, default) or use cached standard stops (False)
+        *addditional data collected by user input
     
     Returns:
         input_line: A string representing the chosen subway line
-        input_station_id: A string representing the chosen subway station
         input_direction: A string representing the chosen direction (uptown/northbound or downtown/southbound)
+        input_station_id: A string representing the chosen subway station
         input_count: An integer, between 1 and 5, representing the count of upcoming subway lines to return
     """
     input_validator = True
@@ -27,17 +29,33 @@ def get_subway_selection() -> tuple[str, str, str, int]:
             print(f"Input {input_line} is not valid, please select a character in the presented range.")
     
     input_validator = True
-    with open('data/stations_per_line.json', 'r') as f:
-        all_stations = json.load(f)
-    selected_line_station_ids = all_stations[input_line]
+    while input_validator:
+        input_direction = str(input("Select 'N' for Northbound/Uptown or 'S' for Southbound/Downtown (defaults to 'S'): ") or "S")
+        if input_direction in ["N", "S"]:
+            input_validator = False
+        else:
+            print(f"Input {input_direction} is not valid, please select N or S.")
+
+    # Create the list of available subway stations IDs, either from real-time data or cached standard weekday service stops
+    if realtime_stations:
+        realtime_stops_for_lines = mta_stops_to_stations.get_stops_for_lines([input_line])
+        selected_line_station_ids_dict = mta_stops_to_stations.remove_directionality_and_dedupe(realtime_stops_for_lines)
+        selected_line_station_ids = selected_line_station_ids_dict[input_line]
+    else:
+        with open('data/stations_per_line.json', 'r') as f:
+            all_stations = json.load(f)
+        selected_line_station_ids = all_stations[input_line]
+
+    # Convert stop IDs to human-readable station names
     with open('data/id_to_name.json', 'r') as f:
         all_station_names = json.load(f)
     selected_line_stations = defaultdict(str)
     for id in selected_line_station_ids:
         selected_line_stations[all_station_names[id]] = id
+
+    input_validator = True
     while input_validator:
         print(list(selected_line_stations.keys()))
-        #print(*selected_line_stations.keys(), sep=", ")
         input_station = str(input("Select a station from the above list (defaults to the first value): ") or next(iter(selected_line_stations)))
         if input_station in selected_line_stations.keys():
             input_validator = False
@@ -45,14 +63,6 @@ def get_subway_selection() -> tuple[str, str, str, int]:
             print(f"Station id for '{input_station}' is {input_station_id}")
         else:
             print(f"Input {input_station} is not valid, please select from the list.")
-
-    input_validator = True
-    while input_validator:
-        input_direction = str(input("Select 'N' for Northbound/Uptown or 'S' for Southbound/Downtown (defaults to 'S'): ") or "S")
-        if input_direction in ["N", "S"]:
-            input_validator = False
-        else:
-            print(f"Input {input_direction} is not valid, please select N or S.")
     
     input_validator = True
     while input_validator:
@@ -62,7 +72,7 @@ def get_subway_selection() -> tuple[str, str, str, int]:
         else:
             print(f"Input {input_count} is not valid, please select a whole number between 1 and 5.")
         
-    return input_line, input_station_id, input_direction, input_count
+    return input_line, input_direction, input_station_id, input_count
 
 def fetch_data_from_input(subway_line: str) -> dict:
     """
@@ -101,15 +111,16 @@ def extract_subway_line(subway_line: str, subway_group_dict: dict) -> dict:
         json.dump(line_stats, f, indent=2)
     return line_stats
 
-def find_next_arrival_times(subway_lines_stats: dict, station_name: str, direction: str, next_x_trains: int) -> list[int]:
+def find_next_arrival_times(subway_lines_stats: dict, direction: str, station_name: str, next_x_trains: int, current_time: int) -> list[int]:
     """
-    For a given subway line's data, a station stop, and a direction, find the next X arrival times.
+    For a given subway line's data, a direction, and a station stop, find the next X arrival times.
     
     Args:
         subway_lines_stats: A dict of MTA real-time data for the chosen subway line
-        station_name: A string representing the chosen subway station
         direction: A string representing the chosen direction (uptown/northbound or downtown/southbound)
+        station_name: A string representing the chosen subway station
         next_x_trains: An integer representing the count of upcoming subway lines to return
+        current_time: An integer representing the current epoch time (converted from float to match MTA output)
     
     Returns:
         arrival_times: A list of integers representing arrival times of upcoming trains, in Epoch time
@@ -121,21 +132,20 @@ def find_next_arrival_times(subway_lines_stats: dict, station_name: str, directi
         if inc >= next_x_trains:
             break
         for i in e['tripUpdate']['stopTimeUpdate']:
-            if i['stopId'] == full_station_name:
+            if i['stopId'] == full_station_name and int(i['arrival']['time']) > current_time:
                 arrival_times.append(int(i['arrival']['time']))
                 inc += 1
     return arrival_times
 
 def main():
-    subway_line, station, direction, count = get_subway_selection()
-    # Example below - Next three downtown 1 trains at Times Square
-    # preferred_subway = "1"; preferred_station = "127"; direction = "S"; input_count = 3
+    subway_line, direction, station, count = get_subway_selection()
     
     subway_group_stats = fetch_data_from_input(subway_line)
     subway_line_stats = extract_subway_line(subway_line, subway_group_stats)
-    next_train_times = find_next_arrival_times(subway_line_stats, station, direction, count)
+    
+    current_time = int(datetime.now().timestamp())
+    next_train_times = find_next_arrival_times(subway_line_stats, direction, station, count, current_time)
 
-    current_time = datetime.now().timestamp()
     for i in next_train_times:
         print(f"Train arriving in {int((i-current_time) / 60.0)} minutes")
 
