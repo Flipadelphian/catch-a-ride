@@ -15,10 +15,10 @@ For a given subway line, station on that line, direction of the train, and numbe
 
 ## TODO
 
-### Improve deduplication of stop IDs for partial directional service
+### Optimize deduplication of stop IDs for single direction
 
-The function `remove_directionality_and_dedupe` in `src/mta_stops_to_stations.py` shows all available station IDs for a line, but does not consider scenarios where a line may skip stations in only one direction or make extra/local stops in only one direction.
-The above function should be updated to create separate North/South lists of stop IDs for a given line, with the main script (having already been updated to prompt for direction before stop ID) selecting the appropriate list.
+The function `split_directionality_and_dedupe` in `src/mta_stops_to_stations.py` always returns two dicts for the give line(s) and does not consider the case when only one direction is needed. The above function should take a direction argument and return only one dictionary for the given direction.
+Complexity of the function will remain the same as it must currently iterate through all content regardless, but it will simplify calls in the main script and avoid having to build a dict that goes unused.
 
 ### Explicitly deprecate the stations per line file in /data 
 
