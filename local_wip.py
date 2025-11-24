@@ -39,8 +39,11 @@ def get_subway_selection(realtime_stations: bool=True) -> tuple[str, str, str, i
     # Create the list of available subway stations IDs, either from real-time data or cached standard weekday service stops
     if realtime_stations:
         realtime_stops_for_lines = mta_stops_to_stations.get_stops_for_lines([input_line])
-        selected_line_station_ids_dict = mta_stops_to_stations.remove_directionality_and_dedupe(realtime_stops_for_lines)
-        selected_line_station_ids = selected_line_station_ids_dict[input_line]
+        selected_line_station_ids_north, selected_line_station_ids_south = mta_stops_to_stations.split_directionality_and_dedupe(realtime_stops_for_lines)
+        if input_direction == "N":
+            selected_line_station_ids = selected_line_station_ids_north[f"{input_line}N"]
+        elif input_direction == "S":
+            selected_line_station_ids = selected_line_station_ids_south[f"{input_line}S"]
     else:
         with open('data/stations_per_line.json', 'r') as f:
             all_stations = json.load(f)
@@ -125,7 +128,10 @@ def find_next_arrival_times(subway_lines_stats: dict, direction: str, station_na
     Returns:
         arrival_times: A list of integers representing arrival times of upcoming trains, in Epoch time
     """
-    full_station_name = station_name + direction
+    if station_name[-1] == "S" or station_name[-1] == "N":
+        full_station_name = station_name
+    else:
+        full_station_name = station_name + direction
     inc = 0
     arrival_times = []
     for e in subway_lines_stats['entity']:

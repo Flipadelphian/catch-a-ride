@@ -48,3 +48,37 @@ def remove_directionality_and_dedupe(lines_with_stops_both_directions) -> dict:
             new_lines_with_stops[k].append(new_station)
         new_lines_with_stops[k] = list(set(new_lines_with_stops[k]))
     return new_lines_with_stops
+
+def split_directionality_and_dedupe(lines_with_stops_both_directions) -> tuple[dict, dict]:
+    """
+    Take the output of function 'get_stops_for_lines', split into two dicts for each direction, and remove all duplicate entries included in station IDs.
+    For example, 1 train station "66 St-Lincoln Center" has values ["124", "124N", "124S"]. If this were the only stop on the line, it would split into: {"1S": ["124S"]} and {"1N": ["124N"]}
+    
+    Args:
+        lines_with_stops_both_directions: A dict of lists of strings, with keys as the names of subway lines and values as a list of machine-readable station IDs (possibly containing duplicate station IDs)
+    
+    Returns:
+        lines_with_stops_north: A dict of lists of strings, with keys as the names of subway lines plus the "N" suffix and values as a list of unique machine-readable northbound station IDs
+        lines_with_stops_south: A dict of lists of strings, with keys as the names of subway lines plus the "S" suffix and values as a list of unique machine-readable southbound station IDs
+    """
+    # Split dicts in half per line
+    lines_with_stops_north = {}
+    lines_with_stops_south = {}
+    for line in lines_with_stops_both_directions.keys():
+        lines_with_stops_north[f"{line}N"] = []
+        lines_with_stops_south[f"{line}S"] = []
+
+    # Extract north/south station IDs, discarding any non-directional IDs
+    for k,v in lines_with_stops_both_directions.items():
+        for station in v:
+            if station[-1] == "N":
+                lines_with_stops_north[f"{k}N"].append(station)
+            elif station[-1] == "S":
+                lines_with_stops_south[f"{k}S"].append(station)
+    
+    # Remove duplicates
+    for line in lines_with_stops_both_directions.keys():
+        lines_with_stops_north[f"{line}N"] = list(set(lines_with_stops_north[f"{line}N"]))
+        lines_with_stops_south[f"{line}S"] = list(set(lines_with_stops_south[f"{line}S"]))
+    
+    return lines_with_stops_north, lines_with_stops_south
