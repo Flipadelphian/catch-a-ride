@@ -3,7 +3,7 @@ Get status on New York City public transit routes
 
 ## Goal
 
-For a given subway line, station on that line, direction of the train, and number of arrivals to check ahead - find the time until that train's next X arrivals.
+For a given subway line, station on that line, direction of the train, and number of arrivals to check ahead - find the time until that train's next X arrivals. Present the data such that it more accessible for on-demand queries of fixed station arrival times than the MTA app or other route planning services (e.g., Google Maps) by making the service queryable by home automation services.
 
 ## Source Data
 
@@ -14,6 +14,16 @@ For a given subway line, station on that line, direction of the train, and numbe
   - MTA static subway data - https://rrgtfsfeeds.s3.amazonaws.com/gtfs_subway.zip
 
 ## TODO
+
+### Create a network diagram for the suggested setup
+
+The description of the Goal has been expanded to show a value-add over using existing services that already pull from the same data set and have features not yet created for this service like alert notes. A diagram to visualize this desired flow should be created to aid in showing the project's value with an example use case.
+
+Example to diagram:
+1. User speaks a key phrase (e.g., 'when does my train get here?') to a home assistant
+2. The home assistant translates the key phrase to an API call, with known input for a specific request, to a host on the local network running `catch-a-ride`
+3. `catch-a-ride` returns subway data in a conversational format (e.g., 'The next 1 trains are in 6, 14, and 22 minutes') as the response of the API call
+4. The home assistant plays the API response on a speaker on the home automation network
 
 ### Optimize deduplication of stop IDs for single direction
 
